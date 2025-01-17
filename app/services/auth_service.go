@@ -1,10 +1,14 @@
 package services
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"os"
 	"time"
+	"web-app/app/models/user"
 
 	"github.com/dgrijalva/jwt-go"
+	"golang.org/x/crypto/argon2"
 )
 
 var (
@@ -70,4 +74,67 @@ func ValidateToken(tokenStr string) error {
 	}
 
 	return nil
+}
+
+func HashPassword(password string) (string, error) {
+	// Generate a salt with a length of 16 bytes
+	salt := make([]byte, 16)
+	if _, err := rand.Read(salt); err != nil {
+		return "", err
+	}
+
+	// Hash the password using the Argon2id key derivation function
+	hash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
+
+	// Encode the salt and hashed password to a base64 string
+	hashedPassword := base64.StdEncoding.EncodeToString(append(salt, hash...))
+
+	return hashedPassword, nil
+}
+
+func DecodeHashedPassword(hashedPassword string) ([]byte, []byte, error) {
+	// Decode the base64 string to the salt and hashed password
+	data, err := base64.StdEncoding.DecodeString(hashedPassword)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	salt := data[:16]
+	hash := data[16:]
+
+	return salt, hash, nil
+}
+
+func AttemptLogin(username, password string) (bool, error) {
+	// Get the user from the database
+	user, err := GetUserByUsername(user.NewUserModel())
+	if err != nil {
+		return false, err
+	}
+
+	// Decode the hashed password
+	salt, hashedPassword, err := DecodeHashedPassword(user.Password)
+	if err != nil {
+		return false, err
+	}
+
+	// Hash the provided password with the salt
+	hash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
+
+	// Compare the hashed password with the provided password
+	if string(hashedPassword) == string(hash) {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func GetUserByUsername(u *user.User) (*user.User, error) {
+	// Find the user by username
+	err := u.FindByUsername()
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
 }
