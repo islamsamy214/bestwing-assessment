@@ -3,7 +3,7 @@ package user
 import (
 	"database/sql"
 	"errors"
-	"fmt"
+	"log"
 	"web-app/app/services/core"
 )
 
@@ -31,7 +31,8 @@ func (u *User) Create() error {
 
 	result, err := u.db.Create(query, u.Username, u.Password)
 	if err != nil {
-		return fmt.Errorf("error creating user: %w", err)
+		log.Printf("error creating user: %v", err)
+		return err
 	}
 
 	lastInsertId, err := result.LastInsertId()
@@ -55,14 +56,16 @@ func (u *User) Find() error {
 
 	rows, err := u.db.Read(query, u.Username)
 	if err != nil {
-		return fmt.Errorf("error finding user: %w", err)
+		log.Printf("error finding user: %v", err)
+		return err
 	}
 	defer rows.Close()
 
 	if rows.Next() {
 		err := rows.Scan(&u.ID, &u.Username, &u.Password, &u.CreatedAt)
 		if err != nil {
-			return fmt.Errorf("error scanning user: %w", err)
+			log.Printf("error scanning user: %v", err)
+			return err
 		}
 		return nil
 	}
@@ -83,14 +86,16 @@ func (u *User) FindByUsername() error {
 
 	rows, err := u.db.Read(query, u.Username)
 	if err != nil {
-		return fmt.Errorf("error finding user by username: %w", err)
+		log.Printf("error finding user: %v", err)
+		return err
 	}
 	defer rows.Close()
 
 	if rows.Next() {
 		err := rows.Scan(&u.ID, &u.Username, &u.Password, &u.CreatedAt)
 		if err != nil {
-			return fmt.Errorf("error scanning user: %w", err)
+			log.Printf("error scanning user: %v", err)
+			return err
 		}
 		return nil
 	}
@@ -111,7 +116,8 @@ func (u *User) Update() error {
 
 	_, err := u.db.Update(query, u.Username, u.Password, u.ID)
 	if err != nil {
-		return fmt.Errorf("error updating user: %w", err)
+		log.Printf("error updating user: %v", err)
+		return err
 	}
 
 	return nil
@@ -129,7 +135,8 @@ func (u *User) Delete() error {
 
 	_, err := u.db.Delete(query, u.ID)
 	if err != nil {
-		return fmt.Errorf("error deleting user: %w", err)
+		log.Printf("error deleting user: %v", err)
+		return err
 	}
 
 	return nil
@@ -153,7 +160,8 @@ func (u *User) Paginate(limit, page int) ([]User, error) {
 
 	rows, err := u.db.Read(query, limit, offset)
 	if err != nil {
-		return nil, fmt.Errorf("error getting users: %w", err)
+		log.Printf("error paginating users: %v", err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -167,14 +175,16 @@ func (u *User) Paginate(limit, page int) ([]User, error) {
 			&user.CreatedAt,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("error scanning user: %w", err)
+			log.Printf("error scanning user: %v", err)
+			return nil, err
 		}
 		users = append(users, user)
 	}
 
 	// Check for errors from iterating over rows
 	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating over users: %w", err)
+		log.Printf("error iterating over rows: %v", err)
+		return nil, err
 	}
 
 	return users, nil
