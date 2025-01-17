@@ -25,7 +25,7 @@ func NewUserModel() *User {
 // Create implements the Model interface Create method
 func (u *User) Create() error {
 	query := `
-        INSERT INTO users (username, password, created_at)
+        INSERT INTO users (username, password)
         VALUES ($1, $2)
         RETURNING id`
 
