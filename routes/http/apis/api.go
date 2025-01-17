@@ -1,6 +1,8 @@
 package apis
 
 import (
+	"web-app/app/http/controllers"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -10,13 +12,13 @@ func Regester(route *gin.Engine) {
 	// route.POST("/login", authController.Login)
 	// route.POST("/signup", authController.Signup)
 
-	// // events
-	// eventController := controllers.EventController{}
-	// route.GET("/events", eventController.Index)
-	// // route.POST("/events", middlewares.Authenticate, eventController.Create)
+	// events
+	eventController := controllers.EventController{}
+	route.GET("/events", eventController.Index)
+	route.POST("/events", eventController.Create)
 	// route.GET("/events/:id", eventController.Show)
-	// // route.PUT("/events/:id", middlewares.Authenticate, eventController.Update)
-	// // route.DELETE("/events/:id", middlewares.Authenticate, eventController.Delete)
+	// route.PUT("/events/:id", middlewares.Authenticate, eventController.Update)
+	// route.DELETE("/events/:id", middlewares.Authenticate, eventController.Delete)
 
 	// // group it to middleware
 	// auth := route.Group("/events")
