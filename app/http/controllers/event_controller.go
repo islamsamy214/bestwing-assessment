@@ -15,7 +15,8 @@ func NewEventController() *EventController {
 
 func (e *EventController) Index(c *gin.Context) {
 	eventsModel := event.NewEventModel()
-	events, err := eventsModel.Paginate(1, 10)
+	events, err := eventsModel.Paginate(10, 1)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -29,6 +30,7 @@ func (e *EventController) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	eventsModel.UserId = 1
 	if err := eventsModel.Create(); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
