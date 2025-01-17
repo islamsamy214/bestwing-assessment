@@ -9,11 +9,11 @@ import (
 )
 
 type Event struct {
-	ID        int64  `json:"id"`
+	ID        int64
 	Name      string `json:"name" binding:"required"`
 	Date      string `json:"date"`
-	CreatedAt string `json:"created_at"`
-	UserId    int64  `json:"user_id"`
+	CreatedAt string
+	UserId    int64 `json:"user_id"`
 	db        *core.PostgresService
 }
 
