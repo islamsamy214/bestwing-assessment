@@ -7,7 +7,7 @@ func NewAuthController() *AuthController {
 }
 
 // func (*AuthController) Login(ctx *gin.Context) {
-// 	user := models.User{}
+// 	user := user.NewUserModel()
 // 	err := ctx.ShouldBindJSON(&user)
 
 // 	if err != nil {
@@ -36,7 +36,7 @@ func NewAuthController() *AuthController {
 // }
 
 // func (*AuthController) Signup(ctx *gin.Context) {
-// 	user := models.User{}
+// 	user := user.NewUserModel()
 // 	err := ctx.ShouldBindJSON(&user)
 
 // 	if err != nil {
