@@ -18,6 +18,13 @@ func (u *UserSeeder) Run() {
 	}
 	userModel.Password = hashedPassword
 
+	// Check if the user already exists
+	userModel.FindByUsername()
+	if userModel.ID != 0 {
+		log.Println("user already exists")
+		return
+	}
+
 	err = userModel.Create()
 	if err != nil {
 		log.Fatalf("error creating user: %v", err)
