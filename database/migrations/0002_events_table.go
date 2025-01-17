@@ -30,6 +30,9 @@ func (*EventTable) Up() {
 			CONSTRAINT fk_user FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 		);
 	`)
+	if err != nil {
+		log.Fatalf("Failed to create events table: %v", err)
+	}
 
 	// Insert into migrations table
 	_, err = db.Create(`INSERT INTO migrations (name) VALUES ($1);`, "events")
