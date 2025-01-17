@@ -35,9 +35,9 @@ func (u *User) Create() error {
 		return err
 	}
 
-	lastInsertId, err := result.LastInsertId()
-	if err == nil {
-		u.ID = lastInsertId
+	err = result.Scan(&u.ID)
+	if err != nil {
+		log.Printf("error scanning user: %v", err)
 	}
 
 	return nil
