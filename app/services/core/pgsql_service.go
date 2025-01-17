@@ -37,8 +37,8 @@ func (s *PostgresService) Close() error {
 	return s.db.Close()
 }
 
-// Create runs an INSERT query.
-func (s *PostgresService) Create(query string, args ...interface{}) (sql.Result, error) {
+// Create runs an INSERT query with a RETURNING clause.
+func (s *PostgresService) Create(query string, args ...interface{}) (*sql.Row, error) {
 	stmt, err := s.db.Prepare(query)
 	if err != nil {
 		log.Println("Error preparing statement:", err)
@@ -46,13 +46,9 @@ func (s *PostgresService) Create(query string, args ...interface{}) (sql.Result,
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(args...)
-	if err != nil {
-		log.Println("Error executing statement:", err)
-		return nil, err
-	}
-
-	return res, nil
+	// Use QueryRow to fetch the result from the RETURNING clause
+	row := stmt.QueryRow(args...)
+	return row, nil
 }
 
 // Read runs a SELECT query.
