@@ -8,11 +8,11 @@ import (
 )
 
 type Event struct {
-	ID        int64
-	Name      string `json:"name" binding:"required"`
-	Date      string `json:"date"`
-	CreatedAt string
-	UserId    int64 `json:"user_id"`
+	ID        int64  `json:"id"`
+	Name      string `form:"name" json:"name" xml:"name" binding:"required"`
+	Date      string `form:"date" json:"date" xml:"date" binding:"required"`
+	CreatedAt string `json:"created_at"`
+	UserId    int64  `json:"user_id"`
 	db        *core.PostgresService
 }
 
@@ -28,7 +28,7 @@ func (e *Event) Create() error {
 	query := `
         INSERT INTO events (name, date, user_id)
         VALUES ($1, $2, $3)
-        RETURNING id`
+        RETURNING id, created_at`
 
 	result, err := e.db.Create(query, e.Name, e.Date, e.UserId)
 	if err != nil {
@@ -36,9 +36,10 @@ func (e *Event) Create() error {
 		return err
 	}
 
-	lastInsertId, err := result.LastInsertId()
-	if err == nil {
-		e.ID = lastInsertId
+	// Get the ID and CreatedAt from the result
+	err = result.Scan(&e.ID, &e.CreatedAt)
+	if err != nil {
+		log.Printf("error scanning event: %v", err)
 	}
 
 	return nil
@@ -127,7 +128,7 @@ func (e *Event) Paginate(limit, page int) ([]Event, error) {
 	query := `
         SELECT id, name, date, created_at, user_id
         FROM events
-        ORDER BY id DESC
+        ORDER BY created_at DESC
         LIMIT $1 OFFSET $2`
 
 	rows, err := e.db.Read(query, limit, offset)
