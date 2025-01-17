@@ -16,7 +16,8 @@ type User struct {
 	db        *core.PostgresService
 }
 
-func NewUserModel(db *core.PostgresService) *User {
+func NewUserModel() *User {
+	db, _ := core.NewPostgresService()
 	return &User{
 		db: db,
 	}

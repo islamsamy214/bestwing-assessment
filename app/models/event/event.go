@@ -17,7 +17,8 @@ type Event struct {
 	db        *core.PostgresService
 }
 
-func NewEventModel(db *core.PostgresService) *Event {
+func NewEventModel() *Event {
+	db, _ := core.NewPostgresService()
 	return &Event{
 		db: db,
 	}
