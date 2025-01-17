@@ -3,7 +3,7 @@ package user
 import (
 	"database/sql"
 	"errors"
-	"log"
+	"fmt"
 	"web-app/app/services/core"
 )
 
@@ -16,9 +16,9 @@ type User struct {
 }
 
 func NewUserModel() *User {
-	// db, _ := core.NewPostgresService()
+	db, _ := core.NewPostgresService()
 	return &User{
-		// db: db,
+		db: db,
 	}
 }
 
@@ -31,8 +31,7 @@ func (u *User) Create() error {
 
 	result, err := u.db.Create(query, u.Username, u.Password)
 	if err != nil {
-		log.Println("Error creating user:", err)
-		return err
+		return fmt.Errorf("error creating user: %w", err)
 	}
 
 	lastInsertId, err := result.LastInsertId()
@@ -56,16 +55,14 @@ func (u *User) Find() error {
 
 	rows, err := u.db.Read(query, u.Username)
 	if err != nil {
-		log.Println("Error getting user:", err)
-		return err
+		return fmt.Errorf("error finding user: %w", err)
 	}
 	defer rows.Close()
 
 	if rows.Next() {
 		err := rows.Scan(&u.ID, &u.Username, &u.Password, &u.CreatedAt)
 		if err != nil {
-			log.Println("Error scanning user:", err)
-			return err
+			return fmt.Errorf("error scanning user: %w", err)
 		}
 		return nil
 	}
@@ -73,28 +70,27 @@ func (u *User) Find() error {
 	return sql.ErrNoRows
 }
 
+// FindByUsername implements the Model interface FindByUsername method
 func (u *User) FindByUsername() error {
 	if u.Username == "" {
 		return errors.New("username is required")
 	}
 
 	query := `
-		SELECT id, username, password, created_at 
-		FROM users 
+		SELECT id, username, password, created_at
+		FROM users
 		WHERE username = $1`
 
 	rows, err := u.db.Read(query, u.Username)
 	if err != nil {
-		log.Println("Error getting user:", err)
-		return err
+		return fmt.Errorf("error finding user by username: %w", err)
 	}
 	defer rows.Close()
 
 	if rows.Next() {
 		err := rows.Scan(&u.ID, &u.Username, &u.Password, &u.CreatedAt)
 		if err != nil {
-			log.Println("Error scanning user:", err)
-			return err
+			return fmt.Errorf("error scanning user: %w", err)
 		}
 		return nil
 	}
@@ -115,8 +111,7 @@ func (u *User) Update() error {
 
 	_, err := u.db.Update(query, u.Username, u.Password, u.ID)
 	if err != nil {
-		log.Println("Error updating user:", err)
-		return err
+		return fmt.Errorf("error updating user: %w", err)
 	}
 
 	return nil
@@ -134,8 +129,7 @@ func (u *User) Delete() error {
 
 	_, err := u.db.Delete(query, u.ID)
 	if err != nil {
-		log.Println("Error deleting user:", err)
-		return err
+		return fmt.Errorf("error deleting user: %w", err)
 	}
 
 	return nil
@@ -159,8 +153,7 @@ func (u *User) Paginate(limit, page int) ([]User, error) {
 
 	rows, err := u.db.Read(query, limit, offset)
 	if err != nil {
-		log.Println("Error getting users:", err)
-		return nil, err
+		return nil, fmt.Errorf("error getting users: %w", err)
 	}
 	defer rows.Close()
 
@@ -174,16 +167,14 @@ func (u *User) Paginate(limit, page int) ([]User, error) {
 			&user.CreatedAt,
 		)
 		if err != nil {
-			log.Println("Error scanning user:", err)
-			return nil, err
+			return nil, fmt.Errorf("error scanning user: %w", err)
 		}
 		users = append(users, user)
 	}
 
 	// Check for errors from iterating over rows
 	if err = rows.Err(); err != nil {
-		log.Println("Error iterating over users:", err)
-		return nil, err
+		return nil, fmt.Errorf("error iterating over users: %w", err)
 	}
 
 	return users, nil
