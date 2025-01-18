@@ -8,17 +8,13 @@ import (
 
 func Regester(route *gin.Engine) {
 	// auth
-	// authController := controllers.AuthController{}
-	// route.POST("/login", authController.Login)
-	// route.POST("/signup", authController.Signup)
+	authController := controllers.NewAuthController()
+	route.POST("/login", authController.Login)
 
 	// events
-	eventController := controllers.EventController{}
+	eventController := controllers.NewEventController()
 	route.GET("/events", eventController.Index)
 	route.POST("/events", eventController.Create)
-	// route.GET("/events/:id", eventController.Show)
-	// route.PUT("/events/:id", middlewares.Authenticate, eventController.Update)
-	// route.DELETE("/events/:id", middlewares.Authenticate, eventController.Delete)
 
 	// // group it to middleware
 	// auth := route.Group("/events")
