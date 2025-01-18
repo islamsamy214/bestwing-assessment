@@ -20,15 +20,17 @@ var (
 
 // Claims represents the JWT claims structure
 type Claims struct {
-	UserID int64 `json:"user_id"`
+	UserID   int64  `json:"user_id"`
+	Username string `json:"username"`
 	jwt.StandardClaims
 }
 
 // GenerateToken generates a new JWT token with the provided user ID
-func GenerateToken(userID int64) (string, error) {
+func GenerateToken(userID int64, username string) (string, error) {
 	// Create a new set of claims
 	claims := &Claims{
-		UserID: userID,
+		UserID:   userID,
+		Username: username,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(), // Token expiration time
 			Issuer:    "github@islamsamy214",

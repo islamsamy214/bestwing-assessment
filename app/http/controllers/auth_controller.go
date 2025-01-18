@@ -28,7 +28,7 @@ func (*AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
-	token, err := services.GenerateToken(loginUser.ID)
+	token, err := services.GenerateToken(loginUser.ID, loginUser.Username)
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
