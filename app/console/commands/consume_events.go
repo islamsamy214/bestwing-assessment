@@ -18,8 +18,8 @@ func ConsumeEvents() {
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":  kafkaConfig["brokers"].(string),
 		"group.id":           kafkaConfig["group"].(string),
-		"auto.offset.reset":  os.Getenv("KAFKA_OFFSET_RESET"), // Consume messages from the beginning if no offset is stored
-		"enable.auto.commit": false,                           // Disable auto commit for manual offset management
+		"auto.offset.reset":  kafkaConfig["offset_reset"].(string),
+		"enable.auto.commit": false, // Disable auto commit for manual offset management
 	})
 	if err != nil {
 		log.Fatalf("Failed to create consumer: %s", err)
