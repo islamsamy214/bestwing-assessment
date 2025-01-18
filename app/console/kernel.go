@@ -41,4 +41,9 @@ func main() {
 	if args[1] == "seed" {
 		commands.Seed()
 	}
+
+	// Check if the first argument is "events:consume"
+	if args[1] == "events:consume" {
+		commands.ConsumeEvents()
+	}
 }
