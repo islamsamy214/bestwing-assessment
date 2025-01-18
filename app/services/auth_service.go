@@ -2,7 +2,9 @@ package services
 
 import (
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/base64"
+	"errors"
 	"os"
 	"time"
 	"web-app/app/models/user"
@@ -76,6 +78,7 @@ func ValidateToken(tokenStr string) error {
 	return nil
 }
 
+// HashPassword hashes the provided password using the Argon2id key derivation function
 func HashPassword(password string) (string, error) {
 	// Generate a salt with a length of 16 bytes
 	salt := make([]byte, 16)
@@ -85,48 +88,54 @@ func HashPassword(password string) (string, error) {
 
 	// Hash the password using the Argon2id key derivation function
 	hash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
+	fullHash := append(salt, hash...)
 
-	// Encode the salt and hashed password to a base64 string
-	hashedPassword := base64.StdEncoding.EncodeToString(append(salt, hash...))
-
-	return hashedPassword, nil
+	// Encode to a base64 string
+	return base64.StdEncoding.EncodeToString(fullHash), nil
 }
 
-func DecodeHashedPassword(hashedPassword string) ([]byte, []byte, error) {
-	// Decode the base64 string to the salt and hashed password
+// decodeHashedPassword decodes the hashed password and returns the password
+func VerifyPassword(hashedPassword, password string) (bool, error) {
+	// Decode the base64 string to get the full hash (salt + hashed password)
 	data, err := base64.StdEncoding.DecodeString(hashedPassword)
 	if err != nil {
-		return nil, nil, err
+		return false, err
 	}
 
+	// Extract the salt (first 16 bytes)
+	if len(data) < 16 {
+		return false, errors.New("invalid hash format")
+	}
 	salt := data[:16]
-	hash := data[16:]
 
-	return salt, hash, nil
+	// Extract the hash (remaining bytes)
+	storedHash := data[16:]
+
+	// Hash the provided password using the same salt
+	newHash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
+
+	// Compare the new hash with the stored hash
+	return subtle.ConstantTimeCompare(newHash, storedHash) == 1, nil
 }
 
-func AttemptLogin(username, password string) (bool, error) {
+func AttemptLogin(user *user.User, password string) (*user.User, error) {
 	// Get the user from the database
-	user, err := GetUserByUsername(user.NewUserModel())
+	user, err := GetUserByUsername(user)
 	if err != nil {
-		return false, err
+		return nil, errors.New("invalid credentials")
 	}
 
-	// Decode the hashed password
-	salt, hashedPassword, err := DecodeHashedPassword(user.Password)
+	// Verify the password
+	match, err := VerifyPassword(user.Password, password)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
-	// Hash the provided password with the salt
-	hash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
-
-	// Compare the hashed password with the provided password
-	if string(hashedPassword) == string(hash) {
-		return true, nil
+	if !match {
+		return nil, errors.New("invalid credentials")
 	}
 
-	return false, nil
+	return user, nil
 }
 
 func GetUserByUsername(u *user.User) (*user.User, error) {
