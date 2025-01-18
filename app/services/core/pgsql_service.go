@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -25,8 +26,9 @@ func NewPostgresService() (*PostgresService, error) {
 		return nil, err
 	}
 
-	db.SetMaxOpenConns(100)
-	db.SetMaxIdleConns(5)
+	db.SetMaxOpenConns(50)
+	db.SetMaxIdleConns(25)
+	db.SetConnMaxLifetime(time.Hour)
 
 	log.Println("PostgreSQL database connection established")
 	return &PostgresService{db: db}, nil
