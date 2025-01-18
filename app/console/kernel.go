@@ -46,4 +46,9 @@ func main() {
 	if args[1] == "events:consume" {
 		commands.ConsumeEvents()
 	}
+
+	// Check if the first argument is "events:produce"
+	if args[1] == "events:produce" {
+		commands.ProduceEvents()
+	}
 }

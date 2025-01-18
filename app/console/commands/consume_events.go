@@ -11,16 +11,10 @@ import (
 
 func ConsumeEvents() {
 	// Kafka configuration
-	kafkaConfig := *configs.NewKafkaConfig()
 	topic := os.Getenv("KAFKA_EVENTS_TOPIC")
 
 	// Create a Kafka consumer
-	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers":  kafkaConfig["brokers"].(string),
-		"group.id":           kafkaConfig["group"].(string),
-		"auto.offset.reset":  kafkaConfig["offset_reset"].(string),
-		"enable.auto.commit": false, // Disable auto commit for manual offset management
-	})
+	consumer, err := kafka.NewConsumer(configs.NewKafkaConfig())
 	if err != nil {
 		log.Fatalf("Failed to create consumer: %s", err)
 	}
