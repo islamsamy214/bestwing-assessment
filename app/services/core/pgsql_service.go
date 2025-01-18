@@ -25,7 +25,7 @@ func NewPostgresService() (*PostgresService, error) {
 		return nil, err
 	}
 
-	db.SetMaxOpenConns(10)
+	db.SetMaxOpenConns(100)
 	db.SetMaxIdleConns(5)
 
 	log.Println("PostgreSQL database connection established")
