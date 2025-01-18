@@ -11,7 +11,7 @@ type UserSeeder struct{}
 func (u *UserSeeder) Run() {
 	userModel := user.NewUserModel()
 
-	userModel.Username = "John-Doe"
+	userModel.Username = "islacks"
 	hashedPassword, err := services.HashPassword("password")
 	if err != nil {
 		log.Fatalf("error hashing password: %v", err)
