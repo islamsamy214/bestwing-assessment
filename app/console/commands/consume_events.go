@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"web-app/app/services"
 	"web-app/configs"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
@@ -41,8 +42,13 @@ func ConsumeEvents() {
 		}
 
 		// Process the message
-		fmt.Printf("Received message: Key=%s, Value=%s, Topic=%s, Partition=%d, Offset=%d\n",
+		log.Printf("Received message: Key=%s, Value=%s, Topic=%s, Partition=%d, Offset=%d\n",
 			string(msg.Key), string(msg.Value), *msg.TopicPartition.Topic, msg.TopicPartition.Partition, msg.TopicPartition.Offset)
+
+		if err := services.NewEventService().HandleEventConsumption(msg.Value); err != nil {
+			log.Printf("Error handling event consumption: %s\n", err)
+			continue
+		}
 
 		// Commit the offset manually
 		_, err = consumer.CommitMessage(msg)

@@ -1,6 +1,9 @@
 package services
 
-import "web-app/app/models/event"
+import (
+	"encoding/json"
+	"web-app/app/models/event"
+)
 
 type EventService struct{}
 
@@ -21,5 +24,30 @@ func (e *EventService) Create(eventsModel *event.Event) error {
 	if err := eventsModel.Create(); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (e *EventService) HandleEventConsumption(eventData []byte) error {
+	// Unmarshal the event data
+	var eventDataJson struct {
+		Name   string `json:"name"`
+		Date   string `json:"date"`
+		UserId int64  `json:"user_id"`
+	}
+
+	if err := json.Unmarshal(eventData, &eventDataJson); err != nil {
+		return err
+	}
+
+	// Create a new event
+	eventsModel := event.NewEventModel()
+	eventsModel.Name = eventDataJson.Name
+	eventsModel.Date = eventDataJson.Date
+	eventsModel.UserId = eventDataJson.UserId
+
+	if err := e.Create(eventsModel); err != nil {
+		return err
+	}
+
 	return nil
 }
