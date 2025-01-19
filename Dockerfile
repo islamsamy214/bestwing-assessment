@@ -23,6 +23,8 @@ ENV GOCACHE=/var/tmp/go-cache
 ENV GOPATH=/var/www/html/go
 ENV GOMODCACHE=/var/www/html/go/pkg/mod
 ENV GOBIN=/var/www/html/go/bin
+ENV CGO_ENABLED=1
+ENV CGO_LDFLAGS="-lrdkafka"
 
 # Define the timezone
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -35,7 +37,7 @@ RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
 # Install dependencies
 RUN apt-get update && apt-get upgrade -y \
     && mkdir -p /etc/apt/keyrings \
-    && apt-get install -y gnupg gosu curl ca-certificates zip unzip git supervisor sqlite3 libcap2-bin libpng-dev python3 dnsutils librsvg2-bin fswatch ffmpeg nano vim librdkafka-dev
+    && apt-get install -y gnupg gosu curl ca-certificates zip unzip git supervisor sqlite3 libcap2-bin libpng-dev python3 dnsutils librsvg2-bin fswatch ffmpeg nano vim librdkafka-dev librdkafka1 pkg-config build-essential
 
 # Install golang
 RUN apt-get update && apt-get install -y wget && \

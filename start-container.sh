@@ -13,6 +13,8 @@ export PATH=$PATH:/usr/local/go/bin
 export GOPATH=/var/www/html/go
 export GOMODCACHE=/var/www/html/go/pkg/mod
 export GOBIN=/var/www/html/go/bin
+export CGO_ENABLED=1
+export CGO_LDFLAGS="-lrdkafka"
 
 go run /var/www/html/app/console/kernel.go migrate
 
