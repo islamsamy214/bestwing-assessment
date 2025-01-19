@@ -12,28 +12,28 @@ type User struct {
 	Username  string `json:"username" binding:"required"`
 	Password  string `json:"password" binding:"required"`
 	CreatedAt string `json:"created_at"`
-	db        *core.PostgresService
 }
 
 func NewUserModel() *User {
-	db, _ := core.NewPostgresService()
-	return &User{
-		db: db,
-	}
+	return &User{}
 }
 
 // Create implements the Model interface Create method
 func (u *User) Create() error {
+	db, _ := core.NewPostgresService()
+
 	query := `
         INSERT INTO users (username, password)
         VALUES ($1, $2)
         RETURNING id`
 
-	result, err := u.db.Create(query, u.Username, u.Password)
+	result, err := db.Create(query, u.Username, u.Password)
 	if err != nil {
 		log.Printf("error creating user: %v", err)
 		return err
 	}
+
+	defer db.Close()
 
 	err = result.Scan(&u.ID)
 	if err != nil {
@@ -45,6 +45,8 @@ func (u *User) Create() error {
 
 // Find implements the Model interface Find method
 func (u *User) Find() error {
+	db, _ := core.NewPostgresService()
+
 	if u.Username == "" {
 		return errors.New("username is required")
 	}
@@ -54,12 +56,12 @@ func (u *User) Find() error {
         FROM users 
         WHERE username = $1`
 
-	rows, err := u.db.Read(query, u.Username)
+	rows, err := db.Read(query, u.Username)
 	if err != nil {
 		log.Printf("error finding user: %v", err)
 		return err
 	}
-	defer rows.Close()
+	defer db.Close()
 
 	if rows.Next() {
 		err := rows.Scan(&u.ID, &u.Username, &u.Password, &u.CreatedAt)
@@ -75,6 +77,8 @@ func (u *User) Find() error {
 
 // FindByUsername implements the Model interface FindByUsername method
 func (u *User) FindByUsername() error {
+	db, _ := core.NewPostgresService()
+
 	if u.Username == "" {
 		return errors.New("username is required")
 	}
@@ -84,12 +88,12 @@ func (u *User) FindByUsername() error {
 		FROM users
 		WHERE username = $1`
 
-	rows, err := u.db.Read(query, u.Username)
+	rows, err := db.Read(query, u.Username)
 	if err != nil {
 		log.Printf("error finding user: %v", err)
 		return err
 	}
-	defer rows.Close()
+	defer db.Close()
 
 	if rows.Next() {
 		err := rows.Scan(&u.ID, &u.Username, &u.Password, &u.CreatedAt)
@@ -105,6 +109,8 @@ func (u *User) FindByUsername() error {
 
 // Update implements the Model interface Update method
 func (u *User) Update() error {
+	db, _ := core.NewPostgresService()
+
 	if u.ID == 0 {
 		return errors.New("id is required")
 	}
@@ -114,7 +120,9 @@ func (u *User) Update() error {
         SET username = $1, password = $2
         WHERE id = $3`
 
-	_, err := u.db.Update(query, u.Username, u.Password, u.ID)
+	defer db.Close()
+
+	_, err := db.Update(query, u.Username, u.Password, u.ID)
 	if err != nil {
 		log.Printf("error updating user: %v", err)
 		return err
@@ -125,6 +133,8 @@ func (u *User) Update() error {
 
 // Delete implements the Model interface Delete method
 func (u *User) Delete() error {
+	db, _ := core.NewPostgresService()
+
 	if u.ID == 0 {
 		return errors.New("id is required")
 	}
@@ -133,7 +143,9 @@ func (u *User) Delete() error {
         DELETE FROM users 
         WHERE id = $1`
 
-	_, err := u.db.Delete(query, u.ID)
+	defer db.Close()
+
+	_, err := db.Delete(query, u.ID)
 	if err != nil {
 		log.Printf("error deleting user: %v", err)
 		return err
@@ -143,6 +155,8 @@ func (u *User) Delete() error {
 }
 
 func (u *User) Paginate(limit, page int) ([]User, error) {
+	db, _ := core.NewPostgresService()
+
 	// Set default values
 	if limit <= 0 {
 		limit = 10
@@ -158,12 +172,13 @@ func (u *User) Paginate(limit, page int) ([]User, error) {
         ORDER BY id DESC
         LIMIT $1 OFFSET $2`
 
-	rows, err := u.db.Read(query, limit, offset)
+	defer db.Close()
+
+	rows, err := db.Read(query, limit, offset)
 	if err != nil {
 		log.Printf("error paginating users: %v", err)
 		return nil, err
 	}
-	defer rows.Close()
 
 	users := make([]User, 0, limit) // Pre-allocate slice with capacity
 	for rows.Next() {

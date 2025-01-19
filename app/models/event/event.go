@@ -13,28 +13,28 @@ type Event struct {
 	Date      string `form:"date" json:"date" xml:"date" binding:"required"`
 	CreatedAt string `json:"created_at"`
 	UserId    int64  `json:"user_id"`
-	db        *core.PostgresService
 }
 
 func NewEventModel() *Event {
-	db, _ := core.NewPostgresService()
-	return &Event{
-		db: db,
-	}
+	return &Event{}
 }
 
 // Create inserts a new event into the database
 func (e *Event) Create() error {
+	db, _ := core.NewPostgresService()
+
 	query := `
         INSERT INTO events (name, date, user_id)
         VALUES ($1, $2, $3)
         RETURNING id, created_at`
 
-	result, err := e.db.Create(query, e.Name, e.Date, e.UserId)
+	result, err := db.Create(query, e.Name, e.Date, e.UserId)
 	if err != nil {
 		log.Printf("error creating event: %v", err)
 		return err
 	}
+
+	defer db.Close()
 
 	// Get the ID and CreatedAt from the result
 	err = result.Scan(&e.ID, &e.CreatedAt)
@@ -47,6 +47,8 @@ func (e *Event) Create() error {
 
 // Find retrieves an event by its ID
 func (e *Event) Find() error {
+	db, _ := core.NewPostgresService()
+
 	if e.ID == 0 {
 		return errors.New("id is required")
 	}
@@ -56,12 +58,12 @@ func (e *Event) Find() error {
         FROM events 
         WHERE id = $1`
 
-	rows, err := e.db.Read(query, e.ID)
+	rows, err := db.Read(query, e.ID)
 	if err != nil {
 		log.Printf("error finding event: %v", err)
 		return err
 	}
-	defer rows.Close()
+	defer db.Close()
 
 	if rows.Next() {
 		err := rows.Scan(&e.ID, &e.Name, &e.Date, &e.CreatedAt, &e.UserId)
@@ -77,16 +79,20 @@ func (e *Event) Find() error {
 
 // Update modifies an existing event in the database
 func (e *Event) Update() error {
+	db, _ := core.NewPostgresService()
+
 	if e.ID == 0 {
 		return errors.New("id is required")
 	}
+
+	defer db.Close()
 
 	query := `
         UPDATE events 
         SET name = $1, date = $2, user_id = $3
         WHERE id = $4`
 
-	_, err := e.db.Update(query, e.Name, e.Date, e.UserId, e.ID)
+	_, err := db.Update(query, e.Name, e.Date, e.UserId, e.ID)
 	if err != nil {
 		log.Printf("error updating event: %v", err)
 		return err
@@ -97,15 +103,19 @@ func (e *Event) Update() error {
 
 // Delete removes an event from the database
 func (e *Event) Delete() error {
+	db, _ := core.NewPostgresService()
+
 	if e.ID == 0 {
 		return errors.New("id is required")
 	}
+
+	defer db.Close()
 
 	query := `
         DELETE FROM events 
         WHERE id = $1`
 
-	_, err := e.db.Delete(query, e.ID)
+	_, err := db.Delete(query, e.ID)
 	if err != nil {
 		log.Printf("error deleting event: %v", err)
 		return err
@@ -116,6 +126,8 @@ func (e *Event) Delete() error {
 
 // Paginate retrieves a paginated list of events
 func (e *Event) Paginate(limit, page int) ([]Event, error) {
+	db, _ := core.NewPostgresService()
+
 	// Set default values
 	if limit <= 0 {
 		limit = 10
@@ -131,12 +143,12 @@ func (e *Event) Paginate(limit, page int) ([]Event, error) {
         ORDER BY created_at DESC
         LIMIT $1 OFFSET $2`
 
-	rows, err := e.db.Read(query, limit, offset)
+	rows, err := db.Read(query, limit, offset)
 	if err != nil {
 		log.Printf("error paginating events: %v", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer db.Close()
 
 	events := make([]Event, 0, limit)
 	for rows.Next() {
