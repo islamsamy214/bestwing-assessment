@@ -1,66 +1,119 @@
 services:
-    go_app:
-        build:
-            context: .
-            dockerfile: Dockerfile
-            args:
-                WWWGROUP: 1000
-        image: 'web-app/go'
-        # deploy:
-        #     resources:
-        #         limits:
-        #             cpus: "1"
-        #             memory: 2048M
-        extra_hosts:
-            - 'host.docker.internal:host-gateway'
-        ports:
-            - '${APP_PORT:-8000}:8000'
-        environment:
-            WWWUSER: 1000
-            GO_APP: 1
-            XDEBUG_MODE: '${APP_XDEBUG_MODE:-off}'
-            XDEBUG_CONFIG: '${APP_XDEBUG_CONFIG:-client_host=host.docker.internal}'
-            IGNITION_LOCAL_SITES_PATH: '${PWD}'
-        volumes:
-            - '.:/var/www/html'
-        networks:
-            - go_app_net
-        # depends_on:
-        #     - pgsql
-    # pgsql:
-    #     image: 'postgres:17'
-    #     # deploy:
-    #     #     resources:
-    #     #         limits:
-    #     #             cpus: "1"
-    #     #             memory: 2048M
-    #     ports:
-    #         - '${FORWARD_DB_PORT:-5432}:5432'
-    #     environment:
-    #         PGPASSWORD: '${DB_PASSWORD:-secret}'
-    #         POSTGRES_DB: '${DB_DATABASE}'
-    #         POSTGRES_USER: '${DB_USERNAME}'
-    #         POSTGRES_PASSWORD: '${DB_PASSWORD:-secret}'
-    #     volumes:
-    #         - 'app-pgsql:/var/lib/postgresql/data'
-    #         - './vendor/laravel/app/database/pgsql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql'
-    #     networks:
-    #         - go_app_net
-    #     healthcheck:
-    #         test:
-    #             - CMD
-    #             - pg_isready
-    #             - '-q'
-    #             - '-d'
-    #             - '${DB_DATABASE}'
-    #             - '-U'
-    #             - '${DB_USERNAME}'
-    #         retries: 3
-    #         timeout: 5s
+  front_app:
+    image: nginx:alpine
+    container_name: front_app
+    ports:
+      - "8090:80" # Expose Nginx server
+    volumes:
+      - ./resources/views:/usr/share/nginx/html:ro
+    networks:
+      - microservices-network
+    depends_on:
+      - app
+  app:
+    container_name: "app"
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        WWWGROUP: 1000
+    image: "web_app/go"
+    # deploy:
+    #     resources:
+    #         limits:
+    #             cpus: "1"
+    #             memory: 2048M
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      WWWUSER: 1000
+      GO_APP: 1
+      XDEBUG_MODE: "${APP_XDEBUG_MODE:-off}"
+      XDEBUG_CONFIG: "${APP_XDEBUG_CONFIG:-client_host=host.docker.internal}"
+      IGNITION_LOCAL_SITES_PATH: "${PWD}"
+    volumes:
+      - ".:/var/www/html"
+    networks:
+      - microservices-network
+    depends_on:
+      - pgsql
+      - kafka
+  pgsql:
+    container_name: "pgsql"
+    image: "postgres:17"
+    restart: unless-stopped
+    # deploy:
+    #     resources:
+    #         limits:
+    #             cpus: "1"
+    #             memory: 2048M
+    ports:
+      - "${FORWARD_DB_PORT:-5432}:5432"
+    environment:
+      PGPASSWORD: "${DB_PASSWORD:-secret}"
+      POSTGRES_DB: "${DB_DATABASE}"
+      POSTGRES_USER: "${DB_USERNAME}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-secret}"
+    volumes:
+      - "app_pgsql:/var/lib/postgresql/data"
+      - "./go/app/database/pgsql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql"
+    networks:
+      - microservices-network
+    healthcheck:
+      test:
+        - CMD
+        - pg_isready
+        - "-q"
+        - "-d"
+        - "${DB_DATABASE}"
+        - "-U"
+        - "${DB_USERNAME}"
+      retries: 3
+      timeout: 5s
+
+  kafka:
+    container_name: kafka
+    image: docker.io/bitnami/kafka:3.6
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+      - "9094:9094"
+    volumes:
+      - "kafka_data:/bitnami"
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://host.docker.internal:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_CFG_CREATE_TOPICS=events-topic:1:1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "kafka-topics.sh --bootstrap-server kafka:9092 --list || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - microservices-network
+
 networks:
-    go_app_net:
-        driver: bridge
+  # app_net:
+  #   driver: bridge
+  microservices-network:
+    external: true
 
 volumes:
-    app-pgsql:
-        driver: local
+  app_pgsql:
+    driver: local
+  kafka_data:
+    driver: local
