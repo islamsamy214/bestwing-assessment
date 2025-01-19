@@ -3,7 +3,7 @@ package configs
 import (
 	"os"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 func NewKafkaConsumerConfig() *kafka.ConfigMap {

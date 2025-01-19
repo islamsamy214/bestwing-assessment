@@ -8,7 +8,7 @@ import (
 	"web-app/app/models/event"
 	"web-app/configs"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 type EventService struct{}
