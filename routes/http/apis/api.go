@@ -16,4 +16,5 @@ func Regester(route *gin.Engine) {
 	eventController := controllers.NewEventController()
 	route.GET("/events", middlewares.Authenticate, eventController.Index)
 	route.POST("/events", middlewares.Authenticate, eventController.Create)
+	route.GET("/events/listen", eventController.Listen)
 }
