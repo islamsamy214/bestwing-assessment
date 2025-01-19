@@ -110,5 +110,17 @@ func (e *EventService) HandleEventConsumption(eventData []byte) error {
 		return err
 	}
 
+	eventPayload := map[string]interface{}{
+		"id":      eventsModel.ID,
+		"name":    eventsModel.Name,
+		"date":    eventsModel.Date,
+		"user_id": eventsModel.UserId,
+	}
+
+	// Send the event to the websocket server
+	sseSevice := NewSSEService()
+	sseSevice.Channel <- eventPayload
+	sseSevice.SendEvent(eventPayload)
+
 	return nil
 }
