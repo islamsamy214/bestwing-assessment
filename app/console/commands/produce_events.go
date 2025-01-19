@@ -14,7 +14,7 @@ func ProduceEvents() {
 	topic := os.Getenv("KAFKA_EVENTS_TOPIC")
 
 	// Create a new producer
-	p, err := kafka.NewProducer(configs.NewKafkaConfig())
+	p, err := kafka.NewProducer(configs.NewProducerConfig())
 	if err != nil {
 		log.Fatalf("Failed to create producer: %s\n", err)
 	}

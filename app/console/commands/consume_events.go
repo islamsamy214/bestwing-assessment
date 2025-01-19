@@ -15,7 +15,7 @@ func ConsumeEvents() {
 	topic := os.Getenv("KAFKA_EVENTS_TOPIC")
 
 	// Create a Kafka consumer
-	consumer, err := kafka.NewConsumer(configs.NewKafkaConfig())
+	consumer, err := kafka.NewConsumer(configs.NewKafkaConsumerConfig())
 	if err != nil {
 		log.Fatalf("Failed to create consumer: %s", err)
 	}
