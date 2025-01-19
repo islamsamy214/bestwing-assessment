@@ -15,7 +15,7 @@ func NewKafkaConsumerConfig() *kafka.ConfigMap {
 	}
 }
 
-func NewProducerConfig() *kafka.ConfigMap {
+func NewKafkaProducerConfig() *kafka.ConfigMap {
 	return &kafka.ConfigMap{
 		"bootstrap.servers": os.Getenv("KAFKA_BROKERS"),
 	}
