@@ -2,7 +2,13 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
+	"os"
 	"web-app/app/models/event"
+	"web-app/configs"
+
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
 type EventService struct{}
@@ -24,6 +30,61 @@ func (e *EventService) Create(eventsModel *event.Event) error {
 	if err := eventsModel.Create(); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (e *EventService) ProduceEvent(eventsModel *event.Event) error {
+	// Kafka configuration
+	topic := os.Getenv("KAFKA_EVENTS_TOPIC")
+
+	// Create a new producer
+	producer, err := kafka.NewProducer(configs.NewKafkaProducerConfig())
+	if err != nil {
+		log.Printf("failed to create producer: %v\n", err)
+		return err
+	}
+	defer producer.Close()
+
+	// Generate a message
+	message := fmt.Sprintf(`{"name": "%s", "date": "%s", "user_id": %d}`, eventsModel.Name, eventsModel.Date, eventsModel.UserId)
+
+	// Error channel for delivery report
+	errChan := make(chan error, 1)
+
+	// Produce the message to the topic
+	err = producer.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+		Value:          []byte(message),
+	}, nil)
+	if err != nil {
+		return fmt.Errorf("failed to produce message: %w", err)
+	}
+
+	// Handle the delivery report
+	go func() {
+		defer close(errChan)
+		for ev := range producer.Events() {
+			switch msg := ev.(type) {
+			case *kafka.Message:
+				if msg.TopicPartition.Error != nil {
+					errChan <- msg.TopicPartition.Error
+				} else {
+					errChan <- nil
+				}
+				return
+			}
+		}
+	}()
+
+	// Wait for the delivery result
+	if deliveryErr := <-errChan; deliveryErr != nil {
+		log.Printf("failed to deliver message: %v\n", deliveryErr)
+		return deliveryErr
+	}
+
+	// Flush remaining messages
+	producer.Flush(15 * 1000)
+
 	return nil
 }
 

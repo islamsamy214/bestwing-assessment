@@ -38,7 +38,7 @@ func (e *EventController) Create(c *gin.Context) {
 		return
 	}
 	eventsModel.UserId = c.MustGet("userId").(int64)
-	if err := services.NewEventService().Create(eventsModel); err != nil {
+	if err := services.NewEventService().ProduceEvent(eventsModel); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
