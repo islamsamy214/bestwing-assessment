@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SSE Example</title>
+</head>
+<body>
+    <h1>SSE Listener</h1>
+    <ul id="events"></ul>
+
+    <script>
+        const eventSource = new EventSource('http://localhost:8000/events/listen');
+        const eventList = document.getElementById('events');
+
+        eventSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            console.log('Received Event:', data);
+
+            const newItem = document.createElement('li');
+            newItem.textContent = `Name: ${data.name}, Date: ${data.date}, User ID: ${data.user_id}`;
+            eventList.appendChild(newItem);
+        };
+
+        eventSource.onerror = function() {
+            console.error('SSE connection error.');
+            eventSource.close();
+        };
+    </script>
+</body>
+</html>
