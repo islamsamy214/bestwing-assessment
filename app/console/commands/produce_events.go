@@ -23,7 +23,7 @@ func ProduceEvents() {
 
 	// Produce messages to topic (asynchronously)
 	deliveryChan := make(chan kafka.Event, 10000)
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 30; i++ {
 		message := fmt.Sprintf(`{"name": "Event %d", "date": "2021-01-01", "user_id": 1}`, i)
 		p.Produce(&kafka.Message{
 			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
