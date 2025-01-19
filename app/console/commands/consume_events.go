@@ -10,6 +10,8 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
+var isConsumerRunning = false
+
 func ConsumeEvents() {
 	// Kafka configuration
 	topic := os.Getenv("KAFKA_EVENTS_TOPIC")
@@ -27,6 +29,12 @@ func ConsumeEvents() {
 		log.Fatalf("Failed to subscribe to topic: %s", err)
 	}
 
+	// Start the consumer
+	if isConsumerRunning {
+		log.Println("Kafka consumer already running.")
+		return
+	}
+	isConsumerRunning = true
 	fmt.Printf("Consumer started, waiting for messages from topic %s...\n", topic)
 
 	// Consume messages in a loop
