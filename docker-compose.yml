@@ -1,15 +1,15 @@
 services:
-  front_app:
-    image: nginx:alpine
-    container_name: front_app
-    ports:
-      - "8090:80" # Expose Nginx server
-    volumes:
-      - ./resources/views:/usr/share/nginx/html:ro
-    networks:
-      - microservices-network
-    depends_on:
-      - app
+  # front_app:
+  #   image: nginx:alpine
+  #   container_name: front_app
+  #   ports:
+  #     - "8090:80" # Expose Nginx server
+  #   volumes:
+  #     - ./resources/views:/usr/share/nginx/html:ro
+  #   networks:
+  #     - microservices-network
+  #   depends_on:
+  #     - app
   app:
     container_name: "app"
     build:
@@ -37,62 +37,62 @@ services:
       - ".:/var/www/html"
     networks:
       - microservices-network
-    depends_on:
-      - pgsql
-      - kafka
-  pgsql:
-    container_name: "pgsql"
-    image: "postgres:17"
-    restart: unless-stopped
-    # deploy:
-    #     resources:
-    #         limits:
-    #             cpus: "1"
-    #             memory: 2048M
-    ports:
-      - "${FORWARD_DB_PORT:-5432}:5432"
-    environment:
-      PGPASSWORD: "${DB_PASSWORD:-secret}"
-      POSTGRES_DB: "${DB_DATABASE}"
-      POSTGRES_USER: "${DB_USERNAME}"
-      POSTGRES_PASSWORD: "${DB_PASSWORD:-secret}"
-    volumes:
-      - "app_pgsql:/var/lib/postgresql/data"
-      - "./go/app/database/pgsql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql"
-    networks:
-      - microservices-network
-    healthcheck:
-      test:
-        - CMD
-        - pg_isready
-        - "-q"
-        - "-d"
-        - "${DB_DATABASE}"
-        - "-U"
-        - "${DB_USERNAME}"
-      retries: 3
-      timeout: 5s
+  #   depends_on:
+  #     - pgsql
+  #     - kafka
+  # pgsql:
+  #   container_name: "pgsql"
+  #   image: "postgres:17"
+  #   restart: unless-stopped
+  #   # deploy:
+  #   #     resources:
+  #   #         limits:
+  #   #             cpus: "1"
+  #   #             memory: 2048M
+  #   ports:
+  #     - "${FORWARD_DB_PORT:-5432}:5432"
+  #   environment:
+  #     PGPASSWORD: "${DB_PASSWORD:-secret}"
+  #     POSTGRES_DB: "${DB_DATABASE}"
+  #     POSTGRES_USER: "${DB_USERNAME}"
+  #     POSTGRES_PASSWORD: "${DB_PASSWORD:-secret}"
+  #   volumes:
+  #     - "app_pgsql:/var/lib/postgresql/data"
+  #     - "./go/app/database/pgsql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql"
+  #   networks:
+  #     - microservices-network
+  #   healthcheck:
+  #     test:
+  #       - CMD
+  #       - pg_isready
+  #       - "-q"
+  #       - "-d"
+  #       - "${DB_DATABASE}"
+  #       - "-U"
+  #       - "${DB_USERNAME}"
+  #     retries: 3
+  #     timeout: 5s
 
-  kafka:
-    container_name: kafka
-    image: docker.io/bitnami/kafka:latest
-    ports:
-      - "9092:9092"
-      - "9094:9094"
-    volumes:
-      - "kafka_data:/bitnami"
-    environment:
-      KAFKA_CFG_NODE_ID: 0
-      KAFKA_CFG_PROCESS_ROLES: controller,broker
-      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
-      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9092
-      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: true
-    networks:
-      - microservices-network
+  # kafka:
+  #   container_name: kafka
+  #   image: docker.io/bitnami/kafka:latest
+  #   ports:
+  #     - "9092:9092"
+  #     - "9094:9094"
+  #   volumes:
+  #     - "kafka_data:/bitnami"
+  #   environment:
+  #     KAFKA_CFG_NODE_ID: 0
+  #     KAFKA_CFG_PROCESS_ROLES: controller,broker
+  #     KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+  #     KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+  #     KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9092
+  #     KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+  #     KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+  #     KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+  #     KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: true
+  #   networks:
+  #     - microservices-network
 
 networks:
   # app_net:
@@ -100,8 +100,8 @@ networks:
   microservices-network:
     external: true
 
-volumes:
-  app_pgsql:
-    driver: local
-  kafka_data:
-    driver: local
+# volumes:
+#   app_pgsql:
+#     driver: local
+#   kafka_data:
+#     driver: local
