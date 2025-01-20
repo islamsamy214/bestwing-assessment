@@ -21,8 +21,25 @@ func ProduceEvents() {
 
 	defer p.Close()
 
-	// Produce messages to topic (asynchronously)
+	// Create a channel to handle delivery events
 	deliveryChan := make(chan kafka.Event, 10000)
+
+	// Goroutine to handle delivery reports
+	go func() {
+		for e := range deliveryChan {
+			switch ev := e.(type) {
+			case *kafka.Message:
+				if ev.TopicPartition.Error != nil {
+					log.Printf("Delivery failed: %v\n", ev.TopicPartition.Error)
+				} else {
+					log.Printf("Delivered message to topic %s [%d] at offset %v\n",
+						*ev.TopicPartition.Topic, ev.TopicPartition.Partition, ev.TopicPartition.Offset)
+				}
+			}
+		}
+	}()
+
+	// Produce messages to topic
 	for i := 0; i < 5; i++ {
 		message := fmt.Sprintf(`{"name": "Event %d", "date": "2021-01-01", "user_id": 1}`, i)
 		p.Produce(&kafka.Message{
@@ -31,23 +48,11 @@ func ProduceEvents() {
 		}, deliveryChan)
 	}
 
-	// Wait for message deliveries
-	for e := range deliveryChan {
-		switch ev := e.(type) {
-		case *kafka.Message:
-			if ev.TopicPartition.Error != nil {
-				log.Printf("Delivery failed: %v\n", ev.TopicPartition.Error)
-			} else {
-				log.Printf("Delivered message to topic %s [%d] at offset %v\n",
-					*ev.TopicPartition.Topic, ev.TopicPartition.Partition, ev.TopicPartition.Offset)
-			}
-		}
-	}
-
-	close(deliveryChan)
-
-	// Flush the producer before closing
+	// Flush producer to ensure all messages are delivered
 	p.Flush(15 * 1000)
 
-	fmt.Println("Produced 100 messages to topic", topic)
+	// Close the delivery channel after flushing
+	close(deliveryChan)
+
+	fmt.Println("Produced messages to topic:", topic)
 }
