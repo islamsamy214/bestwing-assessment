@@ -21,9 +21,7 @@ func NewKafkaConsumerConfig() *kafka.ConfigMap {
 
 func NewKafkaProducerConfig() *kafka.ConfigMap {
 	return &kafka.ConfigMap{
-		"bootstrap.servers":    os.Getenv("KAFKA_BROKERS"),
-		"socket.timeout.ms":    60000,
-		"session.timeout.ms":   60000,
-		"max.poll.interval.ms": 300000,
+		"bootstrap.servers": os.Getenv("KAFKA_BROKERS"),
+		"socket.timeout.ms": 60000,
 	}
 }
