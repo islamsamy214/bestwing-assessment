@@ -71,7 +71,9 @@ KAFKA_EVENTS_TOPIC=events-topic
    go run main.go
    ```
 
-4. Access the application at [http://localhost](http://localhost).
+4. Access the application endpoints at [http://localhost:8000](http://localhost:8000).
+
+5. Access the index.html which contians the SSE at resources/views/index.html
 
 ### API Endpoints
 
