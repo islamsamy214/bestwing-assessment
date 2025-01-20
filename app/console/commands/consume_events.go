@@ -19,13 +19,16 @@ func ConsumeEvents() {
 	// Create a Kafka consumer
 	consumer, err := kafka.NewConsumer(configs.NewKafkaConsumerConfig())
 	if err != nil {
+		log.Printf("Consumer config: %+v", configs.NewKafkaConsumerConfig())
 		log.Fatalf("Failed to create consumer: %s", err)
 	}
 	defer consumer.Close()
 
 	// Subscribe to the topic
+	fmt.Printf("Attempting to subscribe to topic: %s\n", topic)
 	err = consumer.Subscribe(topic, nil)
 	if err != nil {
+		log.Printf("Subscription failed. Topic: %s, Error: %v\n", topic, err)
 		log.Fatalf("Failed to subscribe to topic: %s", err)
 	}
 
