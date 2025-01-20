@@ -17,6 +17,8 @@ export CGO_ENABLED=1
 export CGO_LDFLAGS="-lrdkafka"
 
 go run /var/www/html/app/console/kernel.go migrate
+# produce fake messages to kafka
+go run /var/www/html/app/console/kernel.go events:produce
 
 chown -R app:app /var/www/html
 chmod -R 755 /var/www/html/storage
