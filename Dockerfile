@@ -16,7 +16,7 @@ WORKDIR /var/www/html
 # Environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
-ENV SUPERVISOR_GO_COMMAND="/usr/local/go/bin/go run main.go"
+ENV SUPERVISOR_GO_COMMAND="go run main.go"
 ENV SUPERVISOR_GO_USER="app"
 ENV PGSSLCERT /tmp/postgresql.crt
 ENV GOCACHE=/var/tmp/go-cache
@@ -45,6 +45,7 @@ RUN apt-get update && apt-get install -y wget && \
     tar -C /usr/local -xzf go$GOLANG_VERSION.linux-amd64.tar.gz && \
     rm go$GOLANG_VERSION.linux-amd64.tar.gz && \
     echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
+ENV PATH=$PATH:/usr/local/go/bin
 
 # # Install nodejs
 # RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
