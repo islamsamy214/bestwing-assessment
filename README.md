@@ -44,7 +44,7 @@ KAFKA_EVENTS_TOPIC=events-topic
    docker-compose up --build
    ```
 
-2. Access the application at [http://localhost](http://localhost).
+2. Access the application at [http://localhost:8000](http://localhost:8000).
 
 #### Kubernetes
 1. Apply the Kubernetes manifests:
