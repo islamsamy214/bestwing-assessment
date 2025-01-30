@@ -1,4 +1,3 @@
-# bestwing-assessment
 # Event-Driven Real-Time Messaging Application
 
 This project is an event-driven, real-time messaging application built with Go, PostgreSQL, Apache Kafka, and Server-Sent Events (SSE). The application follows a microservices architecture and utilizes Docker for containerization and Kubernetes for orchestration.
